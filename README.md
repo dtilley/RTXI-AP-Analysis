@@ -58,6 +58,10 @@ git push -u origin add-beeler-reuter-python
 2. Click on the green New pull request button on the right side of your page.
 3. You should see two drop-down selection boxes. Make sure the `base:` is set to `master` and the `compare:` is set to your branch name (i.e. `add-beeler-reuter-python`).
 4. Once you've done that, select Create pull request.
+5. Select Create pull request again. 
+
+That's it. You can share the Pull Request URL with someone for review, or tag the person with their GitHub name in the conversation tab.
+
 
 
 
