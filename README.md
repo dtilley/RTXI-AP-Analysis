@@ -1,6 +1,6 @@
 ### Purpose
 
-This repository is meant to be used for sharing new code with others. The code that you share in this repository is usually too small or not ready to constitute it's own repository. The sections below include steps for sharing new projects (i.e. ones that have not made it to the Christini Lab group before) and edits to existing projects.
+This repository is meant to be used for sharing code. The code that you share in this repository is either too small or not ready to constitute it's own repository. The sections below include steps for sharing new projects (i.e. ones that have not made it to the Christini Lab group before) and edits to existing projects.
 
 #### New Projects
 
