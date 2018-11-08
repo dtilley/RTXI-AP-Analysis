@@ -1,12 +1,12 @@
 ### Purpose
 
-This repository is meant to be used for sharing code. The code that you share in this repository is either too small or not ready to constitute it's own repository. The sections below include steps for sharing new projects (i.e. ones that have not made it to the Christini Lab group before) and edits to existing projects.
+Use this repository to share code that is either too small or not ready for its own repository. The sections below include steps for sharing code that has not made it to the Christini Lab group before.
 
 #### New Projects
 
 ##### Local
 
-1. If you do not have the **code-share-112018** saved locally, then use the following code to clone it to your local machine:
+1. If you do not have the **code-share-112018** repo saved locally, then use the following code to clone it to your local machine:
 
 ```
 git clone https://github.com/Christini-Lab/code-share-112018.git
@@ -61,12 +61,6 @@ git push -u origin add-beeler-reuter-python
 5. Select Create pull request again. 
 
 That's it. You can share the Pull Request URL with someone for review, or tag the person with their GitHub name in the conversation tab.
-
-
-
-
-
-
 
 
 
