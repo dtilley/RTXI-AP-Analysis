@@ -1,159 +1,3 @@
-# rtxiH5reader is an R function that reads in RTXI style H5 data files.
-# Output is a dataframe with a time and data vector.
-library("rhdf5")
-rtxiH5reader <- function(file,return.trial.num=1){
-    # Determine the number of trials and sample dt in ms
-    h5labels <- h5ls(file)
-    num.trials <- length(which(h5labels$name=="Period (ns)"))
-    if (return.trial.num>num.trials){
-        print("Check input file and trial number.")
-        return
-    }
-    dt.ndx <- which(h5labels$name=="Period (ns)")
-    dt.label <- paste(h5labels$group[dt.ndx[return.trial.num]],h5labels$name[dt.ndx[return.trial.num]],sep="/")
-    # dt in ms
-    dt <- h5read(file=file,dt.label)*1e-6
-
-    # Get number of data vectors from specified trial
-    l1 <- paste("/Trial",return.trial.num,"/","Synchronous Data",sep="")
-    numDataVectors <- length(which(h5labels$group==l1))-1
-    name.ndx <-  which(h5labels$group==l1)
-    name.ndx <- name.ndx[1:length(name.ndx)-1]
-    data.names <- gsub(" ","",h5labels$name[name.ndx])
-    data.names <- gsub('[0-9]',"",data.names)
-    # data array index
-    dataNDX <- which(h5labels$dclass=="ARRAY")
-    rawVName <- paste(h5labels$group[dataNDX[return.trial.num]],"/",h5labels$name[dataNDX[return.trial.num]],sep="")
-    raw.vec <- h5read(file=file,name=rawVName)
-
-    # Check data consistency
-    if (length(raw.vec)%%length(data.names)!=0){
-        print("Data vector and labels not correctly parsed.")
-        return
-    }
-
-    ndx.vector <- rep(1:length(data.names),length(raw.vec)/length(data.names))
-    dl <- NULL
-    dl <- as.list(dl)
-    for (i in 1:length(data.names)){
-        dl[[i]] <- raw.vec[which(ndx.vector==i)]
-    }
-
-    # Change to data frame and add labels
-    dl <- as.data.frame(dl)
-    # Create time vector
-    t.ms <- dt*(0:(length(dl[[1]])-1))
-    
-    for (i in 1:length(data.names)){
-        colnames(dl)[i] <- data.names[i]
-    }
-
-    dataset <- cbind(t.ms,dl)
-    return(dataset)
-}
-
-
-# Generic plot fucntion with figure publication standards from the JGP
-jgpplotter <- function(x,y,mar=c(5.1,5.1,5.1,2.1),lwdpt=0.75,...){
-    # convert pt to lwd
-    lwd <- lwdpt*(1/0.75)
-    par(mar=mar,lwd=lwd)
-    plot(x,y,bty="n",...)
-}
-
-
-# Intervals and Beats
-# Function takes in an oscillating signal vector as an argument and returns 
-
-apfind <- function(x,minlength=2,dt=0.1){
-    # dt defines sampling interval between points: RTXI default is 0.1 ms
-    # minlength defines the minimum length of AP signal above the mean potential: default is 2 ms
-    t.threshold <- round(minlength/dt)
-    # AP peaks
-    signalNDX <- which(x>mean(x))
-    apNUM <- NULL
-    first.ndx <- NULL
-    last.ndx <- NULL
-    
-    if (length(signalNDX)==0){
-        print("No APs found. Check input.")
-        return
-    }
-
-    tmp <- 1
-    apCount <- 1
-    for(i in 2:length(signalNDX)){
-
-        if (signalNDX[i-1]==signalNDX[i]-1 && tmp < t.threshold) {
-            # continuous and minimum threshold not met
-            tmp <- tmp+1
-         } else if (signalNDX[i-1]!=signalNDX[i]-1 && tmp < t.threshold) {
-            # discontinuous and minimum threshold not met
-            tmp <- 1
-        } else if (signalNDX[i-1]==signalNDX[i]-1 && tmp == t.threshold) {
-            # continuous and minimum threshold met
-            apNUM[apCount] <- apCount
-            first.ndx[apCount] <- signalNDX[i-tmp]
-            tmp <- tmp+1
-            # check to see if last AP
-            if (i==length(signalNDX)){
-                last.ndx[apCount] <- signalNDX[i]
-            }            
-        } else if (signalNDX[i-1]!=signalNDX[i]-1 && tmp > t.threshold) {
-            # End of AP
-            last.ndx[apCount] <- signalNDX[i-1]
-            apCount <- apCount+1
-            tmp <- 1
-        } else if (signalNDX[i-1]==signalNDX[i]-1 && tmp > t.threshold) {
-            # continuous and minimum threshold exceeded
-            tmp <- tmp+1
-            # check to see if last AP
-            if (i==length(signalNDX)){
-                last.ndx[apCount] <- signalNDX[i]
-            }            
-        } else {
-            # End of recording: AP cut off
-            apNUM <- apNUM[1:length(apNUM)-1]
-            first.ndx <- first.ndx[1:length(first.ndx)-1]
-        }
-
-    }
-    # Check identified APs
-    if (length(apNUM)==length(first.ndx) && length(apNUM)==length(last.ndx)){
-        retdf <- as.data.frame(cbind(apNUM,first.ndx,last.ndx))
-        return(retdf)
-    }
-}
-
-apview <- function(t,y,ndxDF,interactive=FALSE,...){
-    # Plots an AP train with identified APs form apfind
-    # interactive mode prompts the user to exlude misidentified APs
-    jgpplotter(x=t,y=y,...)
-    num.of.APs <- nrow(ndxDF)
-    peakV <- rep(NA,num.of.APs) 
-    peakV.ndx <- rep(NA,num.of.APs)
-    
-    for (i in 1:num.of.APs){
-        # Calculates peakV
-        peakV[i] <- max(y[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]])
-        peakV.ndx[i] <-min(which(y[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]]==peakV[i]))+ndxDF$first.ndx[i]-1
-        # outlines APs default lw is 1pt
-        lines(t[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]],y[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]],col="red",lwd=1.333333)
-        # label AP
-        mtext(text=i,at=t[peakV.ndx[i]],col="red")
-    }
-
-    if(interactive){
-        print("List the AP number(s) separated by commas.")
-        n <- readline(prompt="AP number to exclude:")
-        n <- as.integer(strsplit(n[[1]],split=",")[[1]])
-        new.ndxDF <- ndxDF[-n,]
-        new.nAPs <- 1:nrow(new.ndxDF)
-        new.ndxDF$apNUM <- new.nAPs
-        dev.off()
-        return(new.ndxDF)
-    }
-}
 
 apVoltages <- function(x,ndxDF,dt=0.1){
     # Calculates the voltages in an AP train 
@@ -379,7 +223,14 @@ apfind.variantDT <- function(t.ms,y,minlength=2){
     }
 }
 
-
+# Generic plot fucntion with figure publication standards from the JGP
+# EPS vector graphics work best for cross platform compatibility with AI and Inkscape.
+jgpplotter <- function(x,y,mar=c(5.1,5.1,5.1,2.1),lwdpt=0.75,...){
+    # convert pt to lwd
+    lwd <- lwdpt*(1/0.75)
+    par(mar=mar,lwd=lwd)
+    plot(x,y,bty="n",...)
+}
 
 
 #plot commands
