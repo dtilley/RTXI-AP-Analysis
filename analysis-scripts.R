@@ -1,5 +1,5 @@
-# rtxiH5reader is an R function that reads in RTXI style H5 data files
-# The output a dataframe with a time and data vector
+# rtxiH5reader is an R function that reads in RTXI style H5 data files.
+# Output is a dataframe with a time and data vector.
 library("rhdf5")
 rtxiH5reader <- function(file,return.trial.num=1){
     # Determine the number of trials and sample dt in ms
@@ -53,7 +53,7 @@ rtxiH5reader <- function(file,return.trial.num=1){
 }
 
 
-# Generic plot fucntion
+# Generic plot fucntion with figure publication standards from the JGP
 jgpplotter <- function(x,y,mar=c(5.1,5.1,5.1,2.1),lwdpt=0.75,...){
     # convert pt to lwd
     lwd <- lwdpt*(1/0.75)
@@ -66,7 +66,7 @@ jgpplotter <- function(x,y,mar=c(5.1,5.1,5.1,2.1),lwdpt=0.75,...){
 # Function takes in an oscillating signal vector as an argument and returns 
 
 apfind <- function(x,minlength=2,dt=0.1){
-    # dt defines sampling interval between points: default is 0.1 ms
+    # dt defines sampling interval between points: RTXI default is 0.1 ms
     # minlength defines the minimum length of AP signal above the mean potential: default is 2 ms
     t.threshold <- round(minlength/dt)
     # AP peaks
