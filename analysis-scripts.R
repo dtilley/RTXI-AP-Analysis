@@ -1,4 +1,5 @@
-# H5 reader
+# rtxiH5reader is an R function that reads in RTXI style H5 data files
+# The output a dataframe with a time and data vector
 library("rhdf5")
 rtxiH5reader <- function(file,return.trial.num=1){
     # Determine the number of trials and sample dt in ms
