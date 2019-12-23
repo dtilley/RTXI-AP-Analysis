@@ -3,7 +3,7 @@
 # minlength: defines the minimum length of AP signal above the mean potential: default is 2 ms #
 # dt: defines sampling interval between points: RTXI default is 0.1 ms                         #
 ################################################################################################
-apfind <- function(x,minlength=2,dt=0.1){ 
+apFind <- function(x,minlength=2,dt=0.1){ 
     t.threshold <- round(minlength/dt)
     # AP peaks
     signalNDX <- which(x>mean(x))
@@ -23,7 +23,7 @@ apfind <- function(x,minlength=2,dt=0.1){
         if (signalNDX[i-1]==signalNDX[i]-1 && tmp < t.threshold) {
             # continuous and minimum threshold not met
             tmp <- tmp+1
-         } else if (signalNDX[i-1]!=signalNDX[i]-1 && tmp < t.threshold) {
+        } else if (signalNDX[i-1]!=signalNDX[i]-1 && tmp < t.threshold) {
             # discontinuous and minimum threshold not met
             tmp <- 1
         } else if (signalNDX[i-1]==signalNDX[i]-1 && tmp == t.threshold) {
@@ -56,6 +56,15 @@ apfind <- function(x,minlength=2,dt=0.1){
     }
     # Check identified APs
     if (length(apNUM)==length(first.ndx) && length(apNUM)==length(last.ndx)){
+        ## exclude first and last APs ###
+        if (length(apNUM)>=3){
+            apNUM <- apNUM[2:(length(apNUM)-1)]
+            first.ndx <- first.ndx[2:(length(first.ndx)-1)]
+            last.ndx <- last.ndx[2:(length(last.ndx)-1)]
+        } else {
+            print("Failed to identify minimum APs(n=3) in a train.")
+            return()
+        }
         retdf <- as.data.frame(cbind(apNUM,first.ndx,last.ndx))
         return(retdf)
     }
@@ -69,8 +78,8 @@ apfind <- function(x,minlength=2,dt=0.1){
 # interactive: mode prompts the user to exlude misidentified APs #
 ##################################################################
 
-apview <- function(t,y,ndxDF,interactive=FALSE,...){
-    jgpplotter(x=t,y=y,...)
+apView <- function(t,y,ndxDF,interactive=FALSE,...){
+    jgpplotter(x=t,y=y,type="l",...)
     num.of.APs <- nrow(ndxDF)
     peakV <- rep(NA,num.of.APs) 
     peakV.ndx <- rep(NA,num.of.APs)
@@ -96,6 +105,20 @@ apview <- function(t,y,ndxDF,interactive=FALSE,...){
         return(new.ndxDF)
     }
 }
+
+apSimpleClean <- function(ndxDF) {
+    if (nrow(ndxDF) >= 3){
+        n <- c(1,nrow(ndxDF))
+        new.ndxDF <- ndxDF[-n,]
+        new.ndxDF$apNUM <- 1:nrow(new.ndxDF)
+        return(new.ndxDF)
+    } else {
+        print("Minimum number of APs is 3.")
+        print(paste("Only identified ",nrow(ndxDF)," APs in ndxDF."))
+        return()
+    }
+}
+
 
 # Generic plot fucntion with figure publication standards from the JGP
 # EPS vector graphics work best for cross platform compatibility with AI and Inkscape.

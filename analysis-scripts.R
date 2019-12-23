@@ -40,13 +40,15 @@ apVoltages <- function(x,ndxDF,dt=0.1){
 }
 
 
-apDurations <- function(x,apVoltages,dt=0.1,prePV.time=20){
-    # x: assumed to be a single dimensional vector of voltage
-    # dt: period between samples and defaults to 0.1 ms
-    # apVoltages: a dataframe indices from apVoltages
+apDurations <- function(x,apVoltages,dt=0.1,preThreshold.t=20){
+    # x: assumed to be a single dimensional vector of voltage #
+    # dt: period between samples and defaults to 0.1 ms #
+    # apVoltages: a dataframe indices from apVoltages  #
+    # preThreshold.t: calculates the pre-threshod voltage at time(t) before the peak voltage #
+    # preThreshold.divisions: uses the preTheshold times at divisions for durations.
 
     num.of.APs <- nrow(apVoltages)
-    prePV <- rep(NA,num.of.APs)
+    preTheshold.V <- rep(NA,num.of.APs)
     first.ndx <- rep(NA,num.of.APs)
     last.ndx <- rep(NA,num.of.APs)
     amp <- rep(NA,num.of.APs)
@@ -91,33 +93,41 @@ apDurations <- function(x,apVoltages,dt=0.1,prePV.time=20){
     apd80 <- rep(NA,num.of.APs)    
     apd90 <- rep(NA,num.of.APs)
     
-    # Calculates the minimal AP window
-    minbri <- min(apVoltages$bri[!is.na(apVoltages$bri)])
-    apwindow <- as.integer((0.25*minbri)/dt) # dt is in ms/indices
-    first.ndx <- apVoltages$peakV.ndx-rep(apwindow,num.of.APs)
-    if (length(which(first.ndx<=0))!=0){
-        first.ndx[which(first.ndx<=0)] <- rep(1,length(which(first.ndx<=0)))
+    # Calculates preThreshold.divisions #
+    preThreshold.ndx <- apVoltages$peakV.ndx-as.integer(preThreshold.t/dt)
+    if (length(which(preThreshold.ndx<0))==0){
+        first.ndx <- preThreshold.ndx
+        last.ndx[1:(length(last.ndx)-1)] <- first.ndx[2:length(first.ndx)]
+        last.ndx[length(last.ndx)] <- (2*first.ndx[length(first.ndx)]-first.ndx[(length(first.ndx)-1)])
+        if (last.ndx[length(last.ndx)]>length(x)) {
+            last.ndx[length(last.ndx)] <- length(x)
+        }
+    } else if(length(which(preThreshold.ndx<0))==1 && which(preThreshold.ndx<0)==1) {
+        preThreshold.ndx[1] <- 1
+        first.ndx <- preThreshold.ndx
+        last.ndx[1:(length(last.ndx)-1)] <- first.ndx[2:length(first.ndx)]
+        last.ndx[length(last.ndx)] <- (2*first.ndx[length(first.ndx)]-first.ndx[(length(first.ndx)-1)])
+        if (last.ndx[length(last.ndx)]>length(x)) {
+            last.ndx[length(last.ndx)] <- length(x)
+        }
+    } else {
+        print("Check ndxDF. The preTheshold.t indices are not within the bounds.")
+        return()
     }
-    last.ndx <- apVoltages$peakV.ndx+rep(apwindow,num.of.APs)
-    if (length(which(last.ndx>length(x)))!=0){
-        last.ndx[which(last.ndx>length(x))] <- rep(length(x),length(which(last.ndx>length(x))))
-    }
-
-
-        # Calculates the prePV    
+        # Calculates the preTheshold.V    
         # Calculates APDs
     for (i in 1:num.of.APs){
-        prePV[i] <- mean(x[first.ndx[i]:first.ndx[i]+as.integer(prePV.time/dt)])
-        amp[i] <- apVoltages$peakV[i]-prePV[i]
-        ap10[i] <- prePV[i]+0.9*amp[i]
-        ap20[i] <- prePV[i]+0.8*amp[i]
-        ap30[i] <- prePV[i]+0.7*amp[i]
-        ap40[i] <- prePV[i]+0.6*amp[i]
-        ap50[i] <- prePV[i]+0.5*amp[i]
-        ap60[i] <- prePV[i]+0.4*amp[i]
-        ap70[i] <- prePV[i]+0.3*amp[i]
-        ap80[i] <- prePV[i]+0.2*amp[i]
-        ap90[i] <- prePV[i]+0.1*amp[i]
+        preTheshold.V[i] <- mean(x[first.ndx[i]:(first.ndx[i]+as.integer(5/dt))]) # 5 ms average
+        amp[i] <- apVoltages$peakV[i]-preTheshold.V[i]
+        ap10[i] <- preTheshold.V[i]+0.9*amp[i]
+        ap20[i] <- preTheshold.V[i]+0.8*amp[i]
+        ap30[i] <- preTheshold.V[i]+0.7*amp[i]
+        ap40[i] <- preTheshold.V[i]+0.6*amp[i]
+        ap50[i] <- preTheshold.V[i]+0.5*amp[i]
+        ap60[i] <- preTheshold.V[i]+0.4*amp[i]
+        ap70[i] <- preTheshold.V[i]+0.3*amp[i]
+        ap80[i] <- preTheshold.V[i]+0.2*amp[i]
+        ap90[i] <- preTheshold.V[i]+0.1*amp[i]
 
         apd10.firstndx[i] <- which.min(abs(x[first.ndx[i]:apVoltages$peakV.ndx[i]]-ap10[i]))+first.ndx[i]
         apd20.firstndx[i] <- which.min(abs(x[first.ndx[i]:apVoltages$peakV.ndx[i]]-ap20[i]))+first.ndx[i]
@@ -151,7 +161,7 @@ apDurations <- function(x,apVoltages,dt=0.1,prePV.time=20){
         
     }
 
-    rtndf <- as.data.frame(cbind(prePV,amp,apd10,apd20,apd30,apd40,apd50,apd60,apd70,apd80,apd90,
+    rtndf <- as.data.frame(cbind(preTheshold.V,amp,first.ndx,last.ndx,apd10,apd20,apd30,apd40,apd50,apd60,apd70,apd80,apd90,
                                  ap10,ap20,ap30,ap40,ap50,ap60,ap70,ap80,ap90,apd10,apd20,apd30,apd40,
                                  apd50,apd60,apd70,apd80,apd90,
                                  apd10.firstndx,apd20.firstndx,apd30.firstndx,
