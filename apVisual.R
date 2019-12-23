@@ -8,7 +8,7 @@ jgpplotter <- function(x,y,mar=c(5.1,5.1,5.1,2.1),lwdpt=0.75,...){
 }
 
 
-visualize.apDs <- function(t,Vm,apVoltages,apDurations){
+visualizeAPDs <- function(t,Vm,apVoltages,apDurations){
     jgpplotter(t.ms,Vm,type="l")
     abline(v=t[apVoltages$peakV.ndx],col="blue")
     abline(v=t[apDurations$first.ndx],lty=1,col="seagreen")
