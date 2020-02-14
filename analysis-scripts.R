@@ -117,7 +117,7 @@ apDurations <- function(x,apVoltages,dt=0.1,preThreshold.t=20){
         # Calculates the preTheshold.V    
         # Calculates APDs
     for (i in 1:num.of.APs){
-        preTheshold.V[i] <- mean(x[first.ndx[i]:(first.ndx[i]+as.integer(5/dt))]) # 5 ms average
+        preTheshold.V[i] <- mean(x[first.ndx[i]:(first.ndx[i]+as.integer(5/dt))]) # Mean V
         amp[i] <- apVoltages$peakV[i]-preTheshold.V[i]
         ap10[i] <- preTheshold.V[i]+0.9*amp[i]
         ap20[i] <- preTheshold.V[i]+0.8*amp[i]
