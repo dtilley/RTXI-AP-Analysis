@@ -1,5 +1,5 @@
 
-apVoltages <- function(x,ndxDF,dt=0.1){
+apVoltages <- function(mV,ndxDF,dt=0.1){
     # Calculates the voltages in an AP train 
     # dt: period between samples and defaults to 0.1 ms
     # ndxDF: a dataframe contraining indices from apfind 
@@ -15,15 +15,15 @@ apVoltages <- function(x,ndxDF,dt=0.1){
 
     for (i in 1:num.of.APs){
         # Calculates peakV
-        peakV[i] <- max(x[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]])
-        peakV.ndx[i] <-min(which(x[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]]==peakV[i]))+ndxDF$first.ndx[i]
+        peakV[i] <- max(mV[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]])
+        peakV.ndx[i] <-min(which(mV[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]]==peakV[i]))+ndxDF$first.ndx[i]
         # Calculates the minium between the first AP and the following AP
         if (i!=num.of.APs){
-            mdp[i] <- min(x[ndxDF$first.ndx[i]:ndxDF$first.ndx[i+1]])
-            mdp.ndx[i] <- min(which(x[ndxDF$first.ndx[i]:ndxDF$first.ndx[i+1]]==mdp[i]))+ndxDF$first.ndx[i]
+            mdp[i] <- min(mV[ndxDF$first.ndx[i]:ndxDF$first.ndx[i+1]])
+            mdp.ndx[i] <- min(which(mV[ndxDF$first.ndx[i]:ndxDF$first.ndx[i+1]]==mdp[i]))+ndxDF$first.ndx[i]
         } else { # Calculates the minium between the last AP and end of the AP train
-            mdp[i] <- min(x[ndxDF$first.ndx[i]:length(x)])
-            mdp.ndx[i] <- min(which(x[ndxDF$first.ndx[i]:length(x)]==mdp[i]))+ndxDF$first.ndx[i]
+            mdp[i] <- min(mV[ndxDF$first.ndx[i]:length(mV)])
+            mdp.ndx[i] <- min(which(mV[ndxDF$first.ndx[i]:length(mV)]==mdp[i]))+ndxDF$first.ndx[i]
         }
 
  
