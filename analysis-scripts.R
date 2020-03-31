@@ -16,14 +16,14 @@ apVoltages <- function(mV,ndxDF,dt=0.1){
     for (i in 1:num.of.APs){
         # Calculates peakV
         peakV[i] <- max(mV[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]])
-        peakV.ndx[i] <-min(which(mV[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]]==peakV[i]))+ndxDF$first.ndx[i]
+        peakV.ndx[i] <-min(which(mV[ndxDF$first.ndx[i]:ndxDF$last.ndx[i]]==peakV[i]))+ndxDF$first.ndx[i]-1
         # Calculates the minium between the first AP and the following AP
         if (i!=num.of.APs){
             mdp[i] <- min(mV[ndxDF$first.ndx[i]:ndxDF$first.ndx[i+1]])
             mdp.ndx[i] <- min(which(mV[ndxDF$first.ndx[i]:ndxDF$first.ndx[i+1]]==mdp[i]))+ndxDF$first.ndx[i]
         } else { # Calculates the minium between the last AP and end of the AP train
             mdp[i] <- min(mV[ndxDF$first.ndx[i]:length(mV)])
-            mdp.ndx[i] <- min(which(mV[ndxDF$first.ndx[i]:length(mV)]==mdp[i]))+ndxDF$first.ndx[i]
+            mdp.ndx[i] <- min(which(mV[ndxDF$first.ndx[i]:length(mV)]==mdp[i]))+ndxDF$first.ndx[i]-1
         }
 
  
