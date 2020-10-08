@@ -51,3 +51,32 @@ rtxiH5reader <- function(file,return.trial.num=1){
     dataset <- cbind(t.ms,dl)
     return(dataset)
 }
+
+getTrialTags <- function(file){
+    ## Load h5 file 
+    h5load <- h5dump(file=file,load=TRUE)
+    ## Check for Experimental Tags
+    h5load.vc <- as.vector(h5load[1])
+    col.name <- names(h5load.vc)
+    if (col.name=="Tags"){
+        tags <- t(as.data.frame(h5load.vc))
+        tags.ndx <- row.names(tags)
+        tags.time <- rep(NA,length(row.names(tags)))
+        tags.note <- rep(NA,length(row.names(tags)))
+        for ( i in 1:length(tags.ndx) ) {
+            s <- strsplit(x=tags.ndx[i],split=".",fixed=TRUE)
+            tags.ndx[i] <- as.numeric(s[[length(s)]][length(s[[length(s)]])])
+            s <- strsplit(tags[i],split=",",fixed=TRUE)
+            tags.note[i] <- s[[1]][2]
+            tags.time[i] <- (as.numeric(s[[1]][1])) ## in ns
+        }
+        tags <- as.data.frame(cbind(tags.ndx,tags.time,tags.note),row.names=FALSE)
+        return(tags)
+    } else {
+        print("Could not identify Tags.")
+    }
+}
+
+getTrialEvents <- function (file,return.trial.num=1) {
+
+}
