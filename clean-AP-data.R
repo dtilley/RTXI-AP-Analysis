@@ -3,7 +3,7 @@
 # minlength: defines the minimum length of AP signal above the mean potential: default is 2 ms #
 # dt: defines sampling interval between points: RTXI default is 0.1 ms                         #
 ################################################################################################
-apFind <- function(x,minlength=2,dt=0.1){ 
+apFind <- function(x, minlength=2, dt=0.1, exclude.ends=TRUE){ 
     t.threshold <- round(minlength/dt)
     # AP peaks
     signalNDX <- which(x>mean(x))
@@ -58,9 +58,16 @@ apFind <- function(x,minlength=2,dt=0.1){
     if (length(apNUM)==length(first.ndx) && length(apNUM)==length(last.ndx)){
         ## exclude first and last APs ###
         if (length(apNUM)>=3){
-            apNUM <- apNUM[2:(length(apNUM)-1)]
-            first.ndx <- first.ndx[2:(length(first.ndx)-1)]
-            last.ndx <- last.ndx[2:(length(last.ndx)-1)]
+            n=1
+            m=length(apNUM)
+            if (exclude.ends){
+                n=2
+                m=(length(first.ndx)-1)
+            }
+            apNUM <- apNUM[n:m]
+            first.ndx <- first.ndx[n:m]
+            last.ndx <- last.ndx[n:m]
+            
         } else {
             print("Failed to identify minimum APs(n=3) in a train.")
             return()
