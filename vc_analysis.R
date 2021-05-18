@@ -23,14 +23,16 @@ remove.CapArtifacts <- function(tms, pApF, mV, cap.buffer=0.5, interpolate=FALSE
         if (ndices.lengths[i]==vstep.length) {
             ## Replace pApF w/ NA
             tmp.ndx <- nonZero.ndices.split[[i]][length(nonZero.ndices.split[[i]])]
-            if (interpolate==FALSE){            
-                tmp.na <- rep(NA,length(pApF[tmp.ndx:(tmp.ndx+cap.buff.length)]))
-                pApF[tmp.ndx:(tmp.ndx+cap.buff.length)] <- tmp.na
-            } else {
-                m <- (pApF[(tmp.ndx+cap.buff.length)]-pApF[tmp.ndx])/(tms[(tmp.ndx+cap.buff.length)]-tms[tmp.ndx])
-                tmp.t <- ((1:length(pApF[tmp.ndx:(tmp.ndx+cap.buff.length)]))-1)*dt
-                tmp.y <- m*tmp.t + pApF[tmp.ndx]
-                pApF[tmp.ndx:(tmp.ndx+cap.buff.length)] <- tmp.y
+            if (tmp.ndx != length(tms)) {
+                if (interpolate==FALSE){            
+                    tmp.na <- rep(NA,length(pApF[tmp.ndx:(tmp.ndx+cap.buff.length)]))
+                    pApF[tmp.ndx:(tmp.ndx+cap.buff.length)] <- tmp.na
+                } else {
+                    m <- (pApF[(tmp.ndx+cap.buff.length)]-pApF[tmp.ndx])/(tms[(tmp.ndx+cap.buff.length)]-tms[tmp.ndx])
+                    tmp.t <- ((1:length(pApF[tmp.ndx:(tmp.ndx+cap.buff.length)]))-1)*dt
+                    tmp.y <- m*tmp.t + pApF[tmp.ndx]
+                    pApF[tmp.ndx:(tmp.ndx+cap.buff.length)] <- tmp.y
+                }
             }
         } else {
             tmp.ndx0 <- nonZero.ndices.split[[i]][1]
