@@ -52,26 +52,48 @@ rtxiH5reader <- function(file,return.trial.num=1){
     return(dataset)
 }
 
+
 getTrialTags <- function(file){
-    ## Load h5 file 
-    h5load <- h5dump(file=file,load=TRUE)
-    ## Check for Experimental Tags
-    h5load.vc <- as.vector(h5load[1])
-    col.name <- names(h5load.vc)
-    if (col.name=="Tags"){
-        tags <- t(as.data.frame(h5load.vc))
-        tags.ndx <- row.names(tags)
-        tags.time <- rep(NA,length(row.names(tags)))
-        tags.note <- rep(NA,length(row.names(tags)))
-        for ( i in 1:length(tags.ndx) ) {
-            s <- strsplit(x=tags.ndx[i],split=".",fixed=TRUE)
-            tags.ndx[i] <- as.numeric(s[[length(s)]][length(s[[length(s)]])])
-            s <- strsplit(tags[i],split=",",fixed=TRUE)
-            tags.note[i] <- s[[1]][2]
-            tags.time[i] <- (as.numeric(s[[1]][1])) ## in ns
+    h5labels <- h5ls(file=file)
+    if (h5labels$name[1]=="Tags") {
+        ## Store Trial Timestamps ##
+        timestamp.start.ndices <- which(h5labels$name=="Timestamp Start (ns)")
+        timestamp.stop.ndices <- which(h5labels$name=="Timestamp Stop (ns)")
+        timestamp.start.labels <- paste(h5labels$group[timestamp.start.ndices],"/",h5labels$name[timestamp.start.ndices],sep="")
+        timestamp.stop.labels <- paste(h5labels$group[timestamp.stop.ndices],"/",h5labels$name[timestamp.stop.ndices],sep="")
+        timestamp.start <- rep(NA,length(timestamp.start.ndices))
+        timestamp.stop <- rep(NA,length(timestamp.stop.ndices))
+        for ( i in 1:length(timestamp.start.ndices)){
+            timestamp.start[i] <- h5read(file=file,name=timestamp.start.labels[i],bit64conversion='double')
+            timestamp.stop[i] <- h5read(file=file,name=timestamp.stop.labels[i],bit64conversion='double')
         }
-        tags <- as.data.frame(cbind(tags.ndx,tags.time,tags.note),row.names=FALSE)
-        return(tags)
+
+        ## Store Tag Information ##
+        tags.group.ndices <- which(h5labels$group=="/Tags")
+        tags.labels <- paste("/Tags/",h5labels$name[tags.group.ndices],sep="")
+        tag.no <- rep(NA,length(tags.group.ndices))
+        tag.timestamp <- rep(NA,length(tags.group.ndices))
+        tag.timestamp.ms <- rep(NA,length(tags.group.ndices))
+        tag.text <- rep(NA,length(tags.group.ndices))
+        tag.trial.no <- rep(NA,length(tags.group.ndices))
+        for ( i in 1:length(tags.group.ndices)) {
+            tmp <- h5labels$name[tags.group.ndices[i]]
+            tmp <- unlist(strsplit(tmp,split=" "))
+            tag.no[i] <- as.numeric(tmp[2])
+            tmp <- h5read(file=file,name=tags.labels[i])
+            tmp <- unlist(strsplit(tmp,split=","))
+            tag.timestamp[i] <- as.numeric(tmp[1])
+            tag.text[i] <- tmp[2]
+            ## Assign Trial Number to Tag ##
+            for (j in 1:length(timestamp.start)){
+                if (tag.timestamp[i]>=timestamp.start[j] && tag.timestamp[i]<=timestamp.stop[j]) {
+                    tag.trial.no[i] <- j
+                    tag.timestamp.ms[i] <- (tag.timestamp[i] - timestamp.start[j])*1e-6
+                }
+            }
+        }
+        rtrn.df <- as.data.frame(cbind(tag.no,tag.text,tag.trial.no,tag.timestamp,tag.timestamp.ms))
+        return(rtrn.df)
     } else {
         print("Could not identify Tags.")
     }
